@@ -1,7 +1,6 @@
 #pragma once
 
 #include <memory>
-#include <optional>
 #include <string_view>
 
 #include "devices.hpp"
@@ -12,7 +11,7 @@
 class ThermaltakeController {
   private:
     std::vector<std::unique_ptr<ThermaltakeDevice>> devices_;
-    std::vector<std::optional<LightingEffect>> effects_;
+    std::vector<std::unique_ptr<LightingEffect>> effects_;
     ThermaltakeControllerDriver driver_;
     uint8_t ports_;
     uint8_t unit_;
@@ -78,7 +77,15 @@ class ThermaltakeController {
         if (!devices_[port].get())
             throw std::logic_error(
                 "Device was not set before attaching effect");
-        effects_[port].emplace(effect, devices_[port].get());
+        Type_ effect_type = str_to_type(effect);
+        switch (effect_type) {
+            case Type_::Full: {
+                uint8_t r, g, b;
+                std::unique_ptr<LightingEffect> effect_ptr =
+                    std::make_unique<Full>(devices_[port].get(), r, g, b);
+                effects_[port] = std::move(effect_ptr);
+            }
+        }
         return;
     }
 

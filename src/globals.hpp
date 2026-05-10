@@ -1,6 +1,11 @@
 #pragma once
 
+#include <spdlog/spdlog.h>
+
 #include <cstdint>
+#include <string_view>
+
+#define PKT_SIZE 193
 
 const uint8_t kPROTOCOL_GET = 0x33;
 const uint8_t kPROTOCOL_SET = 0x32;
@@ -28,3 +33,38 @@ class RGB {
         const uint8_t kXTREME = 0x00;
     };
 };
+
+enum class Type_ {
+    Alternating,
+    Temperature,
+    Full,
+    PerLED,
+    Flow,
+    Spectrum,
+    Pulse,
+    Wave,
+    Off
+};
+
+Type_ str_to_type(std::string_view effect_name) {
+    if (effect_name == "Alternating")
+        return Type_::Alternating;
+    else if (effect_name == "Temperature")
+        return Type_::Temperature;
+    else if (effect_name == "Full")
+        return Type_::Full;
+    else if (effect_name == "PerLED")
+        return Type_::PerLED;
+    else if (effect_name == "Flow")
+        return Type_::Flow;
+    else if (effect_name == "Spectrum")
+        return Type_::Spectrum;
+    else if (effect_name == "Pulse")
+        return Type_::Pulse;
+    else if (effect_name == "Wave")
+        return Type_::Wave;
+    else if (effect_name == "Off")
+        return Type_::Off;
+    spdlog::error("Incorrect effect name, switching to default (\"Off\")");
+    return Type_::Off;
+}

@@ -6,6 +6,8 @@
 #include <thread>
 #include <vector>
 
+#include "globals.hpp"
+
 class ThermaltakeControllerDriver {
   private:
     const u_int16_t kVENDOR_ID = 0x264a;
@@ -73,9 +75,16 @@ class ThermaltakeControllerDriver {
         return;
     }
 
-    void write_out(std::vector<u_int8_t> data) {
+    void write_out(std::vector<u_int8_t>& data) {
         int res = libusb_interrupt_transfer(handle_, kENDPOINT_OUT, data.data(),
                                             data.size(), nullptr, 1000);
+        if (res) throw std::runtime_error(libusb_error_name(res));
+        return;
+    }
+
+    void write_out(u_int8_t* data) {
+        int res = libusb_interrupt_transfer(handle_, kENDPOINT_OUT, data,
+                                            PKT_SIZE, nullptr, 1000);
         if (res) throw std::runtime_error(libusb_error_name(res));
         return;
     }
