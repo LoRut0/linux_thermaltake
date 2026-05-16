@@ -1,5 +1,7 @@
 #include <spdlog/spdlog.h>
 
+#include <vector>
+
 #include "devices.hpp"
 
 class LightingEffect {
