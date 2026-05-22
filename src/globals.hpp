@@ -34,7 +34,9 @@ class RGB {
     };
 };
 
-enum class Type_ {
+enum class Model { Full, Separate };
+
+enum class EffectType {
     Alternating,
     Temperature,
     Full,
@@ -46,25 +48,25 @@ enum class Type_ {
     Off
 };
 
-Type_ str_to_type(std::string_view effect_name) {
+EffectType str_to_type(std::string_view effect_name) {
     if (effect_name == "Alternating")
-        return Type_::Alternating;
+        return EffectType::Alternating;
     else if (effect_name == "Temperature")
-        return Type_::Temperature;
+        return EffectType::Temperature;
     else if (effect_name == "Full")
-        return Type_::Full;
+        return EffectType::Full;
     else if (effect_name == "PerLED")
-        return Type_::PerLED;
+        return EffectType::PerLED;
     else if (effect_name == "Flow")
-        return Type_::Flow;
+        return EffectType::Flow;
     else if (effect_name == "Spectrum")
-        return Type_::Spectrum;
+        return EffectType::Spectrum;
     else if (effect_name == "Pulse")
-        return Type_::Pulse;
+        return EffectType::Pulse;
     else if (effect_name == "Wave")
-        return Type_::Wave;
+        return EffectType::Wave;
     else if (effect_name == "Off")
-        return Type_::Off;
+        return EffectType::Off;
     spdlog::error("Incorrect effect name, switching to default (\"Off\")");
-    return Type_::Off;
+    return EffectType::Off;
 }

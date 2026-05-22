@@ -21,16 +21,11 @@ class LightingEffect {
 
 class Full : public LightingEffect {
   private:
-    const uint8_t& red;
-    const uint8_t& green;
-    const uint8_t& blue;
-
     std::vector<uint8_t> data;
 
   public:
-    Full(ThermaltakeDevice* dev, const uint8_t& red, const uint8_t& green,
-         const uint8_t& blue)
-        : LightingEffect(dev), red(red), green(green), blue(blue) {
+    Full(const uint8_t& red, const uint8_t& green, const uint8_t& blue)
+        : LightingEffect(nullptr) {
         data.resize(PKT_SIZE, 0x00);
         data[0] = 0x00;
         data[1] = 0x32;
