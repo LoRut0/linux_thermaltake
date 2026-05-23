@@ -9,7 +9,7 @@ struct LightingConfig {
     uint8_t b = 0;
 };
 
-struct FanConfig {
+struct SpeedConfig {
     std::string model;
     uint8_t speed = 50;
 };
@@ -53,7 +53,7 @@ class Config {
         return cfg;
     }
 
-    static FanConfig loadFanConfig(const std::string& path) {
+    static SpeedConfig loadSpeedConfig(const std::string& path) {
         YAML::Node root = YAML::LoadFile(path);
 
         YAML::Node fm = root["fan_manager"];
@@ -61,7 +61,7 @@ class Config {
             throw std::runtime_error("No 'fan_manager' section in YAML-config");
         }
 
-        FanConfig cfg;
+        SpeedConfig cfg;
 
         if (!fm["model"]) {
             throw std::runtime_error("No field 'model' in 'fan_manager'");
@@ -73,5 +73,38 @@ class Config {
         }
 
         return cfg;
+    }
+
+    static std::vector<std::string> loadDevices(const std::string& path) {
+        YAML::Node root = YAML::LoadFile(path);
+
+        YAML::Node devicesNode = root["devices"];
+        if (!devicesNode) {
+            throw std::runtime_error("Missing 'devices' section in YAML file");
+        }
+        if (!devicesNode.IsMap()) {
+            throw std::runtime_error("'devices' section must be a map");
+        }
+
+        // First collect (key, value) pairs, then sort by key so that the order
+        // does not depend on how the library iterated over the map.
+        std::vector<std::pair<int, std::string>> pairs;
+        pairs.reserve(devicesNode.size());
+        for (const auto& entry : devicesNode) {
+            int key = entry.first.as<int>();
+            std::string value = entry.second.as<std::string>();
+            pairs.emplace_back(key, std::move(value));
+        }
+
+        std::sort(pairs.begin(), pairs.end(), [](const auto& a, const auto& b) {
+            return a.first < b.first;
+        });
+
+        std::vector<std::string> devices;
+        devices.reserve(pairs.size());
+        for (auto& p : pairs) {
+            devices.push_back(std::move(p.second));
+        }
+        return devices;
     }
 };

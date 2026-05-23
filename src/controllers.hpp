@@ -1,5 +1,6 @@
 #pragma once
 
+#include <spdlog/fmt/ranges.h>
 #include <spdlog/spdlog.h>
 
 #include <memory>
@@ -10,12 +11,14 @@
 #include "driver.hpp"
 #include "globals.hpp"
 #include "lighting_manager.hpp"
+#include "speed_manager.hpp"
 
 class ThermaltakeController {
   private:
+    std::atomic_bool running = true;
     std::vector<std::unique_ptr<ThermaltakeDevice>> devices_;
     std::vector<std::unique_ptr<LightingEffect>> effects_;
-    std::vector<uint8_t> speed_;
+    std::vector<std::unique_ptr<SpeedManager>> speeds_;
     ThermaltakeControllerDriver driver_;
     uint8_t ports_;
     uint8_t unit_;
@@ -63,30 +66,9 @@ class ThermaltakeController {
         return FanSpeed{.set_speed = speed, .rpm = rpm};
     }
 
-    void full_loop_() {}
-
-    void separate_loop_() {}
-
-  public:
-    ThermaltakeController(const uint8_t num_of_ports,
-                          std::string_view path_to_cfg, const uint8_t unit = 0,
-                          std::string_view model = "")
-        : devices_(num_of_ports),
-          effects_(num_of_ports),
-          speed_(num_of_ports, 0x00),
-          ports_(num_of_ports),
-          unit_(unit),
-          model_(model),
-          path_to_cfg_(path_to_cfg) {}
-
-    void attach_device(const uint8_t port, std::string_view model) {
-        devices_[port] = std::make_unique<ThermaltakeDevice>(model);
-        return;
-    }
-
-    void attach_effect() {
+    void attach_effect_() {
         LightingConfig cfg = Config::loadLightingConfig(path_to_cfg_.data());
-        EffectType effect_type = str_to_type(cfg.model);
+        EffectType effect_type = str_to_effect_type(cfg.model);
         switch (effect_type) {
             case EffectType::Full: {
                 std::unique_ptr<LightingEffect> effect_ptr =
@@ -97,7 +79,81 @@ class ThermaltakeController {
         return;
     }
 
-    void attach_speed();
+    void attach_speed_() {
+        SpeedConfig cfg = Config::loadSpeedConfig(path_to_cfg_.data());
+        SpeedType speed_type = str_to_speed_type(cfg.model);
+        switch (speed_type) {
+            case SpeedType::Locked: {
+                std::unique_ptr<Locked> speed_ptr =
+                    std::make_unique<Locked>(cfg.speed);
+                speeds_[0] = std::move(speed_ptr);
+            }
+        }
+    };
+
+    void attach_device_() {
+        std::vector<std::string> devices =
+            Config::loadDevices(path_to_cfg_.data());
+        for (size_t i = 0; i < devices.size(); ++i) {
+            auto new_dev = std::make_unique<ThermaltakeDevice>(devices[i]);
+            devices_[i] = std::move(new_dev);
+        }
+        return;
+    }
+
+    void full_loop_() {
+        if (!speeds_[0]) throw std::runtime_error("No speed manager pointer");
+        if (!effects_[0])
+            throw std::runtime_error("No lightning manager pointer");
+        int cycle = 0;
+        while (running) {
+            for (uint8_t i = 0; i < devices_.size(); ++i) {
+                SPDLOG_DEBUG("write_out effect for fan on port {}", i);
+                uint8_t* data = effects_[0]->next_frame(i);
+                SPDLOG_TRACE("effect data: {:#x}",
+                             fmt::join(data, data + 13, ", "));
+                driver_.write_out(data);
+                driver_.read_in(64);
+            }
+            if (cycle % 10 == 0) {
+                for (uint8_t i = 0; i < devices_.size(); ++i) {
+                    SPDLOG_DEBUG("write_out speed for fan on port {}", i);
+                    uint8_t* data = speeds_[0]->get_speed(i);
+                    SPDLOG_TRACE("effect data: {:#x}",
+                                 fmt::join(data, data + 13, ", "));
+                    driver_.write_out(data);
+                    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                    driver_.read_in(64);
+                }
+                cycle = 0;
+            }
+            cycle++;
+            std::this_thread::sleep_for(
+                std::chrono::milliseconds(KEEPALIVE_INTERVAL));
+        }
+    }
+
+    void separate_loop_() { throw std::runtime_error("Not implemented yet"); }
+
+  public:
+    ThermaltakeController(const uint8_t num_of_ports,
+                          std::string_view path_to_cfg, const uint8_t unit = 0,
+                          std::string_view model = "")
+        : devices_(num_of_ports),
+          effects_(num_of_ports),
+          speeds_(num_of_ports),
+          ports_(num_of_ports),
+          unit_(unit),
+          model_(model),
+          path_to_cfg_(path_to_cfg) {
+        driver_.init_controller();
+        attach_device_();
+        SPDLOG_DEBUG("devices attached");
+        attach_effect_();
+        SPDLOG_DEBUG("effects attached");
+        attach_speed_();
+        SPDLOG_DEBUG("speed attached");
+    }
 
     void start() {
         auto isequals = [](std::string_view a, std::string_view b) {
@@ -112,8 +168,10 @@ class ThermaltakeController {
             return true;
         };
         if (isequals(model_, "separate")) {
+            SPDLOG_DEBUG("starting separate loop");
             separate_loop_();
         } else {
+            SPDLOG_DEBUG("starting full loop");
             full_loop_();
         }
         return;

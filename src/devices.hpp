@@ -14,7 +14,7 @@ struct FanSpeed {
 
 class ThermaltakeDevice {
   public:
-    ThermaltakeDevice(std::string_view& model) : spec_(find_spec_(model)) {
+    ThermaltakeDevice(std::string_view model) : spec_(find_spec_(model)) {
         spdlog::debug("successfully created device {}", model);
     }
 

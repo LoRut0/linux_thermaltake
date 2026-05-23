@@ -12,6 +12,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+
 include(FetchContent)
 
 # ---------------- spdlog ----------------
@@ -19,7 +20,7 @@ include(FetchContent)
 FetchContent_Declare(
     spdlog
     GIT_REPOSITORY https://github.com/gabime/spdlog.git
-    GIT_TAG        v1.15.3
+    GIT_TAG        v1.17.0
 )
 
 FetchContent_MakeAvailable(spdlog)
@@ -35,7 +36,7 @@ set(YAML_BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 FetchContent_Declare(
     yaml-cpp
     GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
-    GIT_TAG        0.8.0
+    GIT_TAG        yaml-cpp-0.9.0
 )
 
 FetchContent_MakeAvailable(yaml-cpp)

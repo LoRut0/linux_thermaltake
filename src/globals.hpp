@@ -5,7 +5,9 @@
 #include <cstdint>
 #include <string_view>
 
-#define PKT_SIZE 193
+#define PKT_SIZE 192
+
+#define KEEPALIVE_INTERVAL 2000
 
 const uint8_t kPROTOCOL_GET = 0x33;
 const uint8_t kPROTOCOL_SET = 0x32;
@@ -48,7 +50,7 @@ enum class EffectType {
     Off
 };
 
-EffectType str_to_type(std::string_view effect_name) {
+EffectType str_to_effect_type(std::string_view effect_name) {
     if (effect_name == "Alternating")
         return EffectType::Alternating;
     else if (effect_name == "Temperature")
@@ -69,4 +71,14 @@ EffectType str_to_type(std::string_view effect_name) {
         return EffectType::Off;
     spdlog::error("Incorrect effect name, switching to default (\"Off\")");
     return EffectType::Off;
+}
+
+enum class SpeedType { Locked, Curve };
+
+SpeedType str_to_speed_type(std::string_view speed_name) {
+    if (speed_name == "Locked")
+        return SpeedType::Locked;
+    else if (speed_name == "Curve")
+        return SpeedType::Curve;
+    return SpeedType::Locked;
 }
