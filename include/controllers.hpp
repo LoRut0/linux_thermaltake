@@ -87,6 +87,14 @@ class ThermaltakeController {
                 std::unique_ptr<Locked> speed_ptr =
                     std::make_unique<Locked>(cfg.speed);
                 speeds_[0] = std::move(speed_ptr);
+                break;
+            }
+            case SpeedType::Temperature: {
+                std::unique_ptr<Temperature> speed_ptr =
+                    std::make_unique<Temperature>(cfg.curve, cfg.source_cpu,
+                                                  cfg.source_gpu);
+                speeds_[0] = std::move(speed_ptr);
+                break;
             }
         }
     };

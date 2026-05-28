@@ -50,6 +50,8 @@ enum class EffectType {
     Off
 };
 
+enum class SpeedType { Locked, Temperature };
+
 EffectType str_to_effect_type(std::string_view effect_name) {
     if (effect_name == "Alternating")
         return EffectType::Alternating;
@@ -73,12 +75,12 @@ EffectType str_to_effect_type(std::string_view effect_name) {
     return EffectType::Off;
 }
 
-enum class SpeedType { Locked, Curve };
-
 SpeedType str_to_speed_type(std::string_view speed_name) {
     if (speed_name == "Locked")
         return SpeedType::Locked;
-    else if (speed_name == "Curve")
-        return SpeedType::Curve;
+    else if (speed_name == "Temperature")
+        return SpeedType::Temperature;
+    spdlog::error(
+        "Incorrect speed model name, switching to default (\"Locked\")");
     return SpeedType::Locked;
 }

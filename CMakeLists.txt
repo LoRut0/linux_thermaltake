@@ -22,7 +22,6 @@ FetchContent_Declare(
     GIT_REPOSITORY https://github.com/gabime/spdlog.git
     GIT_TAG        v1.17.0
 )
-
 FetchContent_MakeAvailable(spdlog)
 
 # ---------------- yaml-cpp ----------------
@@ -38,7 +37,6 @@ FetchContent_Declare(
     GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
     GIT_TAG        yaml-cpp-0.9.0
 )
-
 FetchContent_MakeAvailable(yaml-cpp)
 
 # ---------------- libusb ----------------
@@ -46,10 +44,20 @@ FetchContent_MakeAvailable(yaml-cpp)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(LIBUSB REQUIRED IMPORTED_TARGET libusb-1.0)
 
+# ---------------- NVML (libnvidia-ml) ----------------
+# Header is vendored in include/third_vendors/nvml.h.
+# The shared library ships with the proprietary NVIDIA driver (nvidia-utils).
+
+find_library(NVML_LIB nvidia-ml)
+if(NOT NVML_LIB)
+    message(FATAL_ERROR "libnvidia-ml not found (install nvidia-utils)")
+endif()
+
 # ---------------- executable ----------------
 
 add_executable(thermaltake-controller
-    main.cpp
+    src/main.cpp
+    src/sensors.cpp
 )
 
 target_include_directories(thermaltake-controller
@@ -62,6 +70,7 @@ target_link_libraries(thermaltake-controller
         spdlog::spdlog
         yaml-cpp::yaml-cpp
         PkgConfig::LIBUSB
+        ${NVML_LIB}
 )
 
 target_compile_options(thermaltake-controller
