@@ -1,0 +1,26 @@
+[Unit]
+Description=Thermaltake LEDFanBox fan controller
+Documentation=https://github.com/loruto/my_linux_thermaltake_rgb
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/thermaltake-controller
+Restart=on-failure
+RestartSec=5
+
+# --- security hardening (works because the daemon only needs USB + config) ---
+# Run as root for the alpha. To drop privileges later, see the udev rule
+# and uncomment the lines below.
+# User=thermaltake
+# Group=thermaltake
+
+# Reduce the attack surface even when running as root
+ProtectSystem=strict
+ProtectHome=true
+ReadOnlyPaths=/etc/thermaltake-controller
+PrivateTmp=true
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

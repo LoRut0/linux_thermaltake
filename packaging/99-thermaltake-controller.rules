@@ -1,0 +1,4 @@
+# Thermaltake LEDFanBox (264a:2260)
+# Grant access to the device so the controller does not need full root.
+# Mode 0660 + group "thermaltake": members of that group can talk to the device.
+SUBSYSTEM=="usb", ATTR{idVendor}=="264a", ATTR{idProduct}=="2260", MODE="0660", GROUP="thermaltake", TAG+="uaccess"

@@ -12,7 +12,7 @@ devices:
 fan_manager:
   model: Temperature
   sources: ["Cpu", "Gpu"]
-  curve: [[40, 0], [55, 30], [70, 70], [85, 100]]
+  curve: [[30, 00], [45, 20], [55, 50], [70, 70], [85, 100]]
 
 lighting_manager:
   model: Full

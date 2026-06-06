@@ -84,3 +84,35 @@ target_compile_definitions(thermaltake-controller
     PRIVATE
         SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_DEBUG
 )
+
+
+# ---------------- installation ----------------
+include(GNUInstallDirs)
+
+# Main binary -> /usr/bin
+install(TARGETS thermaltake-controller
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+# Default config -> /etc/thermaltake-controller/
+# Installed only if it does NOT already exist,
+# so user edits are never overwritten.
+install(CODE "
+    set(cfg_dst \"\$ENV{DESTDIR}${CMAKE_INSTALL_FULL_SYSCONFDIR}/thermaltake-controller/config.yml\")
+    if(EXISTS \"\${cfg_dst}\")
+        message(STATUS \"Config already exists, keeping it: \${cfg_dst}\")
+    else()
+        file(INSTALL \"${CMAKE_CURRENT_SOURCE_DIR}/config.yml\"
+             DESTINATION \"\$ENV{DESTDIR}${CMAKE_INSTALL_FULL_SYSCONFDIR}/thermaltake-controller\")
+    endif()
+")
+
+# systemd unit -> /usr/lib/systemd/system
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/packaging/thermaltake-controller.service
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/systemd/system
+)
+
+# udev rule -> /usr/lib/udev/rules.d
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/packaging/99-thermaltake-controller.rules
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/udev/rules.d
+)
